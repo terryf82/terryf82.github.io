@@ -2,7 +2,7 @@
 layout: post
 title: Put your problem into words, and you just might solve it
 excerpt_separator: <!--more-->
-comments: false
+comments: true
 ---
 
 While working on a project the other day I had an interesting experience that really made me think about the nature of problem solving. This particular project requires a web interface that allows users to build complex, nested queries to be run against a database, but without them understanding the technical language required to do that. In essence, it's a query-building tool that returns data that allows the next stage of the project to commence, which involves using that data to build relevant text content.
