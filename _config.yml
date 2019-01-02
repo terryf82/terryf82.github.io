@@ -8,4 +8,6 @@ description: Better software and outcomes, one screen at a time
 disqus:
     shortname: thenextscreen
 
+google_analytics: UA-128986173-1
+
 plugins: [jekyll-paginate]
