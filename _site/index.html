@@ -154,10 +154,27 @@
 
 <p>Each child ID also needed to be checked to confirm it matched an existing node, otherwise it was irrelevant and should be ignored (the functional equivalent of null).</p>
 
-<p>There were over ten files to process in this way, some containing up to 20 possible relations per destination, so executing a separate cypher query for each column manually seemed inefficient and prone to error. Thankfully, the cypher syntax is flexible enough to allow easy processing of variable length data in this format (that is, a single statement can correctly handle rows that have all 4 relations as well as those that have less than 4, even zero):</p>
+<p>My first attempt at working through each file looked something like this:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>using periodic commit
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>load csv from ".../parent-child-relationships.csv" as row
+match (parent:Destination {id: row[0]})
+match (child:Destination {id: row[1]})
+merge (parent)-[r:IS_PARENT_OF]-&gt;(child)
+
 load csv from ".../parent-child-relationships.csv" as row
+match (parent:Destination {id: row[0]})
+match (child:Destination {id: row[2]})
+merge (parent)-[r:IS_PARENT_OF]-&gt;(child)
+
+load csv from ".../parent-child-relationships.csv" as row
+match (parent:Destination {id: row[0]})
+match (child:Destination {id: row[3]})
+merge (parent)-[r:IS_PARENT_OF]-&gt;(child)
+</code></pre></div></div>
+
+<p>And so on for each column. But there were over ten CSV files to process, some containing up to 20 possible relations per destination rather than just 4 as in the example above. The idea of executing a separate cypher query for each column manually seemed inefficient and prone to error. Thankfully, the cypher syntax is flexible enough to allow easy processing of variable length data in this format (that is, a single statement can correctly handle rows that have all 4 relations as well as those that have less than 4, even zero):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>load csv from ".../parent-child-relationships.csv" as row
 unwind range(1,4) as i
 match (parent:Destination {id: row[0]})
 match (child:Destination {id: row[i]})
@@ -165,7 +182,7 @@ merge (parent)-[r:IS_PARENT_OF]-&gt;(child)
 return parent
 </code></pre></div></div>
 
-<p>Essentially the <em>unwind range(1, 4)</em> allows us to iterate through the columns of a single row, and take any necessary action on each value. True null handling would require only adding a case statement to conditionally continue if <em>row[i] &lt;&gt; ““</em>.</p>
+<p>Essentially the <em>unwind range(1, 4)</em> allows us to iterate through the columns of a single row, and take any necessary action on each value. Null values are skipped throughout the row by testing their ability to match an existing node, but the logic would be similar for actual non-null (<em>row[i] &lt;&gt; ““</em>) evaluation.</p>
 
 <p>The ability of Cypher &amp; Neo4J to speed up ingestion of inconsistent CSV data continues to impress me and I’m looking forward to learning more of the advanced features as the project progresses.</p>
 
