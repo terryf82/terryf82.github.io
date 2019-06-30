@@ -9,6 +9,8 @@ excerpt: Make better decisions by looking at the whole picture, not just pieces 
 
 # Why Your Organisation Should Invest in Knowledge Architecture
 
+{{ page.date | date: '%d %B, %Y' }}
+
 Across many industries and fields of endeavour, there are few organisations successfully operating in the modern era that aren’t both consumers and producers of data. This isn’t really a new phenomena - throughout the industrial era that defined much of the 20th century, organisations and businesses alike would take some form of data, process and understand it, and use that knowledge to improve their ability to deliver on their mission.
 
 What has changed fundamentally is the arrival of inexpensive, scalable platforms that can generate very large datasets, and the creation of new tools and techniques to extract meaning from them. These technologies offer a lot of promise to organisations looking to properly manage their data, but they’re often deployed in ad-hoc ways, used to solve a specific problem for a specific department in a way that doesn’t allow the greater group to benefit.
