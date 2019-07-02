@@ -15,6 +15,7 @@
 # in the templates via {{ site.myvariable }}.
 title: Insightable Times
 timezone: Australia/Brisbane
+google_analytics: UA-143154220-1
 email: terryfranklin82@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Turning data into knowledge, and knowledge into action.
