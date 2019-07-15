@@ -15,7 +15,7 @@ Across many industries and fields of endeavour, there are few organisations succ
 
 What has changed fundamentally is the arrival of inexpensive, scalable platforms that can generate very large datasets, and the creation of new tools and techniques to extract meaning from them. These technologies offer a lot of promise to organisations looking to properly manage their data, but they’re often deployed in ad-hoc ways, used to solve a specific problem for a specific department in a way that doesn’t allow the greater group to benefit.
 
-Knowledge architecture is the strategic arrangement of these data resources and technologies to provide a connected, interpretable view of an organisation’s data, with the explicit goal of empowering people to make better decisions.
+Knowledge architecture then is the strategic arrangement of these data resources into a context-aware framework to provide a connected, interpretable view of an organisation’s data, with the explicit goal of empowering people to make better decisions.
 
 ### What Are The Costs of Not Investing in Knowledge Architecture?
 
@@ -35,7 +35,7 @@ This is especially true for endeavours that operate in human-centric fields. Gro
 
 **3. Misunderstandings across multiple datasets are more likely**
 
-It doesn’t have to be as spectacular as the infamous Lockheed Martin/NASA, imperial/metric failure that destroyed the Mars Climate Orbiter in 1999 - any collection of datasets is likely to include assumptions on how to appropriately format and present different types of data. Even when not mission-critical, these assumptions can lead to poor outcomes when attempting to connect them ad-hoc without prior understanding of their differences.
+It doesn’t have to be as spectacular as the infamous [Lockheed Martin/NASA, imperial/metric failure that destroyed the Mars Climate Orbiter in 1999](http://edition.cnn.com/TECH/space/9909/30/mars.metric.02/){:target="_blank"} - any collection of datasets is likely to include assumptions on how to appropriately format and present different types of data. Even when not mission-critical, these assumptions can lead to poor outcomes when attempting to connect them ad-hoc without prior understanding of their differences.
 
 A well engineered knowledge framework considers these issues of convention as a starting point, and abstracts away technical differences to create a seamless fabric of data to base decisions on. Data that might be essentially reporting the same thing under different terminology can also be appropriately handled, bringing further clarity to the decision-making process.
 
