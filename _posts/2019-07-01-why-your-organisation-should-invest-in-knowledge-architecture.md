@@ -15,7 +15,7 @@ Across many industries and fields of endeavour, there are few organisations succ
 
 What has changed fundamentally is the arrival of inexpensive, scalable platforms that can generate very large datasets, and the creation of new tools and techniques to extract meaning from them. These technologies offer a lot of promise to organisations looking to properly manage their data, but they’re often deployed in ad-hoc ways, used to solve a specific problem for a specific department in a way that doesn’t allow the greater group to benefit.
 
-_Knowledge architecture is the strategic arrangement of data resources into a context-aware framework, to provide a connected and interpretable view of an organisation’s data that empowers better decision-making._
+_Knowledge architecture is the strategic management of data resources in a context-aware framework, providing a connected and interpretable view of an organisation’s data to empower better decision-making._
 
 ### What Are The Costs of Not Investing in Knowledge Architecture?
 
