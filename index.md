@@ -1,4 +1,13 @@
-## Welcome to GitHub Pages
+## Recent Write-Ups:
+
+<ul>
+  {% for post in site.posts %}
+    <li>
+      <a href="{{ post.url }}">{{ post.title }}</a>
+      {{ post.excerpt }}
+    </li>
+  {% endfor %}
+</ul>
 
 You can use the [editor on GitHub](https://github.com/terryf82/terryf82.github.io/edit/main/index.md) to maintain and preview the content for your website in Markdown files.
 
