@@ -1,4 +1,8 @@
-## Recent Write-Ups:
+---
+title:  "CyberSec Writeups"
+---
+
+## Recent Writeups:
 
 <ul>
   {% for post in site.posts %}

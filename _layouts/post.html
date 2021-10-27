@@ -6,7 +6,7 @@ layout: default
 <h1>{{ page.title }}</h1>
 
 {% if page.tags %}
-  <em>{{ page.tags | join: "</em> | <em>" }}</em>
+  <span class='tag'>{{ page.tags | join: "</span> <span class='tag'>" }}</span>
 {% endif %}
 
 <!-- <p class="view">by {{ page.author | default: site.author }}</p> -->
