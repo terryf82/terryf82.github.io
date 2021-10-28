@@ -7,7 +7,7 @@ tags: burp-suite cyber-chef linux nmap python xml xxe
 excerpt_separator: <!--more-->
 ---
 
-BountyHunter is a Linux-based machine authored by *ejedev*, with an average rating of 4.5 stars.
+**BountyHunter** is a Linux-based machine authored by *ejedev*, with an average rating of 4.5 stars.
 
 <!--more-->
 
