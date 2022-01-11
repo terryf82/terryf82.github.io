@@ -15,7 +15,7 @@ excerpt_separator: <!--more-->
 
 ### // Recon
 ```
-nmap -sV -A -p- 10.10.11.105
+nmap -A -p- 10.10.11.105
 Starting Nmap 7.92 ( https://nmap.org ) at 2021-10-29 13:18 AEST
 Nmap scan report for 10.10.11.105
 Host is up (0.025s latency).
