@@ -340,3 +340,5 @@ I can't pretend that this wasn't a pretty frustrating conclusion to the machine,
 ### // Lessons Learned
 1. Despite how obvious an exploit might seem to suit your machine (or how well it "seems" to be working) always confirm the version of software in use is actually vulnerable, before investing time in it
 2. Password re-use happens in the real world, so there's no reason not to expect it in a CTF
+
+<p align="center"><img src="/assets/images/validation/5.png" /></p>
