@@ -11,7 +11,7 @@ excerpt_separator: <!--more-->
 
 <!--more-->
 
-<p align="center"><img src="/assets/images/buff/main.png" /></p>
+<p align="center"><img src="/assets/images/scriptkiddie/main.png" /></p>
 
 ### // Recon
 ```
