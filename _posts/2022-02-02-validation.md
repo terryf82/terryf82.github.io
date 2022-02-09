@@ -4,6 +4,7 @@ title:  "HackTheBox: Validation"
 date:   2022-02-02 10:00:00 +1000
 categories: red-team
 tags: linux sql-injection password-reuse
+summary: People are often the weakest part of any system's security - it pays to remember that for this box.
 excerpt_separator: <!--more-->
 ---
 
@@ -12,6 +13,10 @@ excerpt_separator: <!--more-->
 <!--more-->
 
 <p align="center"><img src="/assets/images/validation/main.png" /></p>
+
+### // Lessons Learned
+1. Despite how obvious an exploit might seem to suit your machine (or how well it "seems" to be working) always confirm the version of software in use is actually vulnerable, before investing time in it
+2. Password re-use happens in the real world, so there's no reason not to expect it in a CTF
 
 ### // Recon
 ```
@@ -338,7 +343,3 @@ cat /root/root.txt
 I can't pretend that this wasn't a pretty frustrating conclusion to the machine, but given the propensity for humans to reuse passwords, this machine certainly scores high on real-world applicability (or as Ive heard it said before in the cyber-security realm, "it's not dumb if it works")
 
 <p align="center"><img src="/assets/images/validation/5.png" /></p>
-
-### // Lessons Learned
-1. Despite how obvious an exploit might seem to suit your machine (or how well it "seems" to be working) always confirm the version of software in use is actually vulnerable, before investing time in it
-2. Password re-use happens in the real world, so there's no reason not to expect it in a CTF

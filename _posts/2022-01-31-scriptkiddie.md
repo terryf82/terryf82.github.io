@@ -4,6 +4,7 @@ title:  "HackTheBox: ScriptKiddle"
 date:   2022-01-31 08:00:00 +1000
 categories: red-team
 tags: linux reverse-shell command-injection metasploit
+summary: Neat collection of browser-based security tools, that can be turned against the box with the right input.
 excerpt_separator: <!--more-->
 ---
 
@@ -12,6 +13,11 @@ excerpt_separator: <!--more-->
 <!--more-->
 
 <p align="center"><img src="/assets/images/scriptkiddie/main.png" /></p>
+
+### // Lessons Learned
+1. Some tools like netcat have different implementation, and the switches for these may differ
+2. When testing command injection, it's better to test simple payloads first (e.g. curl-ing a url on your attack machine) to confirm the target is definitely vulnerable, before moving on to more complex payloads
+3. It's important to enumerate the presence and access of *all* users on the machine, not just the one that was used to gain an initial foothold
 
 ### // Recon
 ```
@@ -272,8 +278,3 @@ root@scriptkiddie:/home/pwn#
 ```
 
 <p align="center"><img src="/assets/images/scriptkiddie/6.png" /></p>
-
-### // Lessons Learned
-1. Some tools like netcat have different implementation, and the switches for these may differ
-2. When testing command injection, it's better to test simple payloads first (e.g. curl-ing a url on your attack machine) to confirm the target is definitely vulnerable, before moving on to more complex payloads
-3. It's important to enumerate the presence and access of *all* users on the machine, not just the one that was used to gain an initial foothold
