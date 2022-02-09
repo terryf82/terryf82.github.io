@@ -1,5 +1,6 @@
 ---
 layout: post
+name: armageddon
 title:  "HackTheBox: Armageddon"
 date:   2022-01-12 10:00:00 +1000
 categories: red-team

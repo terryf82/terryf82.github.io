@@ -1,5 +1,6 @@
 ---
 layout: post
+name: investigating-windows
 title:  "TryHackMe: Investigating Windows"
 date:   2021-10-28 09:24:00 +1000
 categories: blue-team

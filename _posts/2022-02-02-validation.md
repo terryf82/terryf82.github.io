@@ -1,5 +1,6 @@
 ---
 layout: post
+name: validation
 title:  "HackTheBox: Validation"
 date:   2022-02-02 10:00:00 +1000
 categories: red-team

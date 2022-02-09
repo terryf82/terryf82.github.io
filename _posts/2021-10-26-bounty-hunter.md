@@ -1,5 +1,6 @@
 ---
 layout: post
+name: bounty-hunter
 title:  "HackTheBox: BountyHunter"
 date:   2021-10-26 10:19:36 +1000
 categories: red-team
@@ -11,7 +12,7 @@ excerpt_separator: <!--more-->
 
 <!--more-->
 
-<p align="center"><img src="/assets/images/bounty-hunter/main.webp" /></p>
+<p align="center"><img src="/assets/images/bounty-hunter/main.png" /></p>
 
 ### // Recon
 ```

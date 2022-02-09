@@ -1,5 +1,6 @@
 ---
 layout: post
+name: scriptkiddie
 title:  "HackTheBox: ScriptKiddle"
 date:   2022-01-31 08:00:00 +1000
 categories: red-team
