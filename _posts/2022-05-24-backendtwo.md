@@ -581,7 +581,7 @@ After each guess you will recieve a hint which indicates:
 [a-z] - what letters are correct.
 ```
 
-[PAM-Wordle](https://github.com/cocoa-xu/pam_wordle?ref=cpp.codetea.com) is basically an implementation of a word guessing game, similar to Wordle (or Hangman for those old enough to remember). While it is possible to guess the correct word with no background context, some further system enumeration reveals there is a wordlist at `/opt/.words` from which the secret word will always be chosen. Using the feedback from each guess, and some regular expression magic against this wordlist (e.g. if letters a, b and c are reported to be incorrect, these can be excluded via a 'negative-lookaround' pattern such as `^((?!abc).)*$)`) it's possible to identify the correct word, and the leaked password is found to be valid:
+[PAM-Wordle](https://github.com/cocoa-xu/pam_wordle?ref=cpp.codetea.com) is basically an implementation of a word guessing game, similar to Wordle (or Hangman for those old enough to remember). While it is possible to guess the correct word with no background context, some further system enumeration reveals there is a wordlist at `/opt/.words` from which the secret word will always be chosen. Using the feedback from each guess, and some regular expression magic against this wordlist (e.g. if letters a, b and c are reported to be incorrect, these can be excluded via a 'negative-lookaround' pattern such as `^((?![abc]).)*$)`) it's possible to identify the correct word, and the leaked password is found to be valid:
 ```
 --- Attempt 1 of 6 ---
 Word: utime
