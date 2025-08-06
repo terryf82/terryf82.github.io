@@ -409,4 +409,6 @@ Given that both experiments proved successful, a valid question becomes - is the
 2. Custom code or scripts - any kind of code that specifically makes a request to IMDS (again, usually for retrieving envirnoment details like AWS region) will most likely break if nodes are configured with a hop limit of `1`.
 
 ## Conclusion
-As long as applications are properly configured with IRSA or PodIdentity, enforcing an IMDS hop limit of `1` should not impact their ability to function, and it will improve the security of your cluster.
+
+!!! abstract "TLDR"
+    As long as applications are properly configured with IRSA or PodIdentity, enforcing an IMDS hop limit of `1` should not impact their ability to function, and it will improve the security of your cluster.
