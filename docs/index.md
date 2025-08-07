@@ -9,7 +9,7 @@ hide:
 
 ---
 
-## New Posts
+## Recent Posts
 {% for post in get_blog_posts() %}
 ### [{{ post.title }}](/{{ post.url }})
 {{ post.date_obj }}
