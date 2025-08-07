@@ -1,4 +1,4 @@
-site_name: Security Research
+site_name: pitfallen.net
 site_url: https://terryf82.github.io/
 theme:
   name: material
@@ -15,6 +15,7 @@ theme:
     - navigation.expand # expand all subsections by default
     - navigation.footer
 plugins:
+  - macros
   - blog:
       blog_dir: blog
       archive: false
