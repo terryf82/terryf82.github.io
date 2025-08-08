@@ -20,12 +20,12 @@ The principle of role-based access control (RBAC) within kubernetes is built on 
 
 The situation isn't helped by the fact that, within a kubernetes cluster, not all players are equal. Pods may only need basic permissions to perform their specific task (pulling messages from SQS, writing files to S3 etc.) but something has to provide the resources for those pods to run on, which is the role of the worker nodes. These nodes require access at a more fundamental (and impactful) level - they need to be able to pull the images that run the workloads, as well as understand the resources and configuration of the environment they exist within.
 
-A lot of this functionality is handled via the Internal Metadata Service (IMDS), a locally-accessible API that provides access to configuration data, as well as the credentials needed for the node to authenticate itself. IMDS was never intended to service anything but the hosting node, but the nature of the container runtime (EKS uses [containerd](https://containerd.io/)) means that pods are simply processes running atop the worker, allowing them to access the infamous `http://169.254.169.254` address just as easily. Since the first version of IMDS (`IMDSv1`) was built with no method of authentication, as well as being vulnerable to server-side request forgery (SSRF), this enabled a straightforward path to privilege escalation that resulted in a number of high-profile incidents, such as the [Capital One data breach](https://dl.acm.org/doi/full/10.1145/3546068) in 2019.
+A lot of this functionality is handled via the Internal Metadata Service (IMDS), a locally-accessible API that provides access to configuration data, as well as the credentials needed for the node to authenticate itself. IMDS was never intended to service anything but the hosting node, but the nature of the container runtime (EKS uses [containerd](https://containerd.io/)) means that pods are simply processes running atop the worker, allowing them to access the infamous `http://169.254.169.254` address just as easily. Since the first version of IMDS (`IMDSv1`) was built with no method of authentication, this enabled a straightforward path to privilege escalation that resulted in a number of high-profile incidents, such as the [Capital One data breach](https://dl.acm.org/doi/full/10.1145/3546068) in 2019.
 
-In response, Amazon introduced [IMDSv2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html) and took a major step forward in reducing this risk, by mandating that use of the metadata API must first involve generation of a session token via an `HTTP PUT` request. This token must then be supplied via a header in all subsequent requests. Asssuming that IMDSv2 is not just enabled but actually *enforced*, this prevents an attacker from proxying metadata requests through a misconfigured firewall, unrestricted reverse proxy or SSRF. But it still doesn't fully address the problem.
+In response, Amazon introduced [IMDSv2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html) and took a major step forward in reducing this risk, by mandating use of the metadata API must first involve generation of a session token via an `HTTP PUT` request. This token must then be supplied via a header in all subsequent requests. Asssuming that IMDSv2 is not just enabled but actually *enforced*, this prevents an attacker from proxying metadata requests using various common methods, such as abusing a misconfigured firewall, unrestricted reverse proxy or server-side request forgery (SSRF) vulnerability. And yet, it still doesn't fully address the problem.
 
 ## The Remaining Threat: RCE
-By itself IMDSv2 still fails to address one class of vulnerability - remote code execution (RCE). An attacker who can execute code inside a running pod (via uploading a web-shell, discovery a command injection vulnerability  or similar) can easily help themselves to node-level access. How easily?  Simply request a session token via curl:
+By itself, the new approach to security in IMDSv2 is still vulnerable to abuse through the discovery of remote code execution (RCE). An attacker who can execute commands inside a running pod (via uploading a web-shell, discovery a command injection vulnerability or similar) can easily promote themselves to node-level access. How easily? Simply request a session token via curl:
 
 ```sh
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
@@ -54,7 +54,7 @@ export AWS_SECRET_ACCESS_KEY="d5NB5Jr/y+018xfUdjtuNO/3Q9sxmps21bW6rGK1"
 set AWS_SESSION_TOKEN="IQoJb3Jp...B6alm4tBg6A=="
 ```
 
-And with very little trouble, the attacker has assumed the worker node's role:
+And with very little effort, the attacker has assumed the worker node's role:
 ```sh
 aws sts get-caller-identity
 {
