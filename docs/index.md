@@ -3,9 +3,8 @@ hide:
   - toc
 ---
 
-# pitfallen.net
-
-### **pitfallen** (`pit·fawl·en`) *[adj]* - *educated in the art of making things work, through the full enumeration of all possible routes destined to fail.*
+# **pitfallen** (`pit·fawl·en`) *[adj]*
+## *educated in the art of making things work, through the full enumeration of all possible routes destined to fail.*
 
 ---
 
