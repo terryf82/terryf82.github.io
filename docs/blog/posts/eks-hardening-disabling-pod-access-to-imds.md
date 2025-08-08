@@ -16,7 +16,7 @@ summary: "Effectively securing pods inside an EKS cluster, swirling with cloud p
 <!-- more -->
 
 ## Introduction
-The principle of role-based access control (RBAC) within kubernetes is built on a simple idea - supplying only the permissions required by an individual process (pod, in this case) in order for it to do its job. There's a lot riding on this control: get it right, and pods managing all kinds of different workloads can safely operate alongside each other in a common environment; get it wrong though, and there is the very real risk of simple vulnerabilities escalating into potentially disastrous outcomes.
+The principle of role-based access control (RBAC) within kubernetes is built on a simple idea - provide only the permissions required by an individual process (pod, in this case) in order for it to do its job. There's a lot riding on this control: get it right, and pods managing all kinds of different workloads can safely operate alongside each other in a common environment; get it wrong though, and there is the very real risk of simple vulnerabilities escalating into potentially disastrous outcomes.
 
 The situation isn't helped by the fact that, within a kubernetes cluster, not all players are equal. Pods may only need basic permissions to perform their specific task (pulling messages from SQS, writing files to S3 etc.) but something has to provide the resources for those pods to run on, which is the role of the worker nodes. These nodes require access at a more fundamental (and impactful) level - they need to be able to pull the images that run the workloads, as well as understand the resources and configuration of the environment they exist within.
 
