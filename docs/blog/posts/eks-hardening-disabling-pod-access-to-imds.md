@@ -417,5 +417,5 @@ Given that both experiments proved successful, a valid question becomes - is the
 
 ## Conclusion
 
-!!! abstract "TLDR"
+!!! abstract "Can It Be Done?"
     As long as applications are properly configured with IRSA or PodIdentity, enforcing an IMDS hop limit of `1` should not impact their ability to function, and it will improve the security of your cluster.
