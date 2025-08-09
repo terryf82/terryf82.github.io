@@ -1,5 +1,5 @@
 site_name: pitfallen.net
-site_url: https://terryf82.github.io/
+site_url: https://pitfallen.net/
 theme:
   name: material
   font:
@@ -15,7 +15,9 @@ theme:
     - navigation.expand # expand all subsections by default
     - navigation.footer
 plugins:
-  - social
+  - social:
+      enabled: true
+      cards: true
   - macros
   - blog:
       blog_dir: blog
