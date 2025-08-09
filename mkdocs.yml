@@ -15,6 +15,7 @@ theme:
     - navigation.expand # expand all subsections by default
     - navigation.footer
 plugins:
+  - social
   - macros
   - blog:
       blog_dir: blog
