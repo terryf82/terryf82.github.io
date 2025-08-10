@@ -14,7 +14,7 @@ social:
 
 # EKS Hardening: Blocking Pod-Level Access to IMDS
 
-### Effectively securing pods inside an EKS cluster, swirling with cloud permissions, has always been challenging. Is it possible to close off a well-known source of risk, while still ensuring basic functionality?
+*Effectively securing pods inside an EKS cluster, swirling with cloud permissions, has always been challenging. Is it possible to close off a well-known source of risk, while still ensuring basic functionality?*
 
 ![EKS Hardening: Blocking Pod-Level Access to IMDS](../../assets/images/post1.png)
 
