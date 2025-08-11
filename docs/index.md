@@ -3,8 +3,10 @@ hide:
   - toc
 ---
 
-# **pitfallen** (`pit·fawl·en`) *[adj]*
-### *Educated in the art of making things work, through the full enumeration of all possible routes destined to fail*
+# Cloud & Container Security
+
+## **pitfallen** (`pit·fawl·en`) *[adj]*
+### *Educated in the art of making things work, through the full enumeration of all possible routes destined to fail.*
 
 ---
 

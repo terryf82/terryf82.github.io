@@ -22,7 +22,7 @@ plugins:
   - social
   - macros
   - blog:
-      blog_dir: blog
+      blog_dir: .
       archive: false
       post_url_format: "{slug}"
       authors_profiles_toc: true
@@ -31,8 +31,6 @@ plugins:
   - tags
 nav:
   - Home: index.md
-  - Blog:
-      - Blog: blog/index.md
 markdown_extensions:
   - attr_list
   - pymdownx.emoji:
