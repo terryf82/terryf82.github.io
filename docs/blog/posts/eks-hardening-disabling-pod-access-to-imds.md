@@ -4,6 +4,8 @@ date: 2025-08-04
 #   - AWS
 #   - EKS
 #   - kubernetes
+authors:
+  - terryf82
 slug: eks-hardening-blocking-pod-level-access-to-imds
 title: "EKS Hardening: Blocking Pod-Level Access to IMDS"
 summary: "Effectively securing pods inside an EKS cluster, swirling with cloud permissions, has always been challenging. Is it possible to close off a well-known source of risk, while still ensuring basic functionality?"

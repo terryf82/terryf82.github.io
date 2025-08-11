@@ -14,15 +14,19 @@ theme:
     - navigation.tracking # anchor tracking
     - navigation.expand # expand all subsections by default
     - navigation.footer
+extra:
+  social:
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/terryf82/
 plugins:
-  - social:
-      enabled: true
-      cards: true
+  - social
   - macros
   - blog:
       blog_dir: blog
       archive: false
       post_url_format: "{slug}"
+      authors_profiles_toc: true
+      author_profiles: true
   - search
   - tags
 nav:
