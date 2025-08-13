@@ -30,6 +30,11 @@ plugins:
       author_profiles: true
   - search
   - rss:
+      feeds_filenames:
+        json_created: feed.json
+        json_updated: feed-updated.json
+        rss_created: rss.xml
+        rss_updated: rss-updated.xml
       match_path: "posts/.*"
       date_from_meta:
         as_creation: date.created
