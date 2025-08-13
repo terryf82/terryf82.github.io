@@ -1,5 +1,6 @@
 ---
-date: 2025-08-04
+date:
+  created: 2025-08-04
 # categories:
 #   - AWS
 #   - EKS
@@ -11,14 +12,14 @@ title: "EKS Hardening: Blocking Pod-Level Access to IMDS"
 summary: "Effectively securing pods inside an EKS cluster, swirling with cloud permissions, has always been challenging. Is it possible to close off a well-known source of risk, while still ensuring basic functionality?"
 social:
   cards:
-    image: ../../assets/images/post1.png
+    image: ../assets/images/post1.png
 ---
 
 # EKS Hardening: Blocking Pod-Level Access to IMDS
 
 *Effectively securing pods inside an EKS cluster, swirling with cloud permissions, has always been challenging. Is it possible to close off a well-known source of risk, while still ensuring basic functionality?*
 
-![EKS Hardening: Blocking Pod-Level Access to IMDS](../../assets/images/post1.png)
+![EKS Hardening: Blocking Pod-Level Access to IMDS](../assets/images/post1.png)
 
 <!-- more -->
 
