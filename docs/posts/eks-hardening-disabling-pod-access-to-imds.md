@@ -59,7 +59,7 @@ These values can then be set as environment variables:
 ```sh
 export AWS_ACCESS_KEY_ID="ASIA4VDBL2NIXYVXTEPT"
 export AWS_SECRET_ACCESS_KEY="d5NB5Jr/y+018xfUdjtuNO/3Q9sxmps21bW6rGK1"
-set AWS_SESSION_TOKEN="IQoJb3Jp...B6alm4tBg6A=="
+export AWS_SESSION_TOKEN="IQoJb3Jp...B6alm4tBg6A=="
 ```
 
 And with very little effort, the attacker has assumed the worker node's role:
