@@ -149,7 +149,7 @@ bash-5.1# ls -l /bin/sh
 lrwxrwxrwx. 1 root root 5 Sep 12 03:30 /bin/sh -> brush
 ```
 
-`brush` is a nonstandard, restricted command runner, that doesn't implement typical interactive behaviour or shell redirection features. Essentially it's a minimalist interface to the Bottlerocket API client, meaning it doesn't have the bash-like features needed to establish the connection to our waiting listener. In a typical Linux environment, there are usually plenty of alternative ways to establish a reverse-shell - [revshells.com](https://revshells.com) lists several:
+`brush` is a nonstandard, restricted command runner, that doesn't implement typical interactive behaviour or shell redirection features. Essentially it's a minimalist interface to the Bottlerocket API client, meaning it doesn't have the bash-like features needed to establish the connection to our waiting listener. In a typical Linux environment, there are usually plenty of alternative ways to establish a reverse-shell - [revshells.com](https://revshells.com) lists several, including:
 
 - `nc`
 - `busybox`
@@ -157,7 +157,6 @@ lrwxrwxrwx. 1 root root 5 Sep 12 03:30 /bin/sh -> brush
 - `python3`
 - `php`
 - `ruby`
-- ...
 
 Unsurprisingly, none of these are present inside of Bottlerocket. By design, the OS comes with no (usable) shell, package manager or language interpreters - just a minimal container runtime 🚀
 
