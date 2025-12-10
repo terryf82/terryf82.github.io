@@ -1,0 +1,923 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Cloud & Container Security">
+      
+      
+      
+        <link rel="canonical" href="https://pitfallen.net/blog/eks-hardening-blocking-pod-level-access-to-imds/">
+      
+      
+      
+        <link rel="next" href="../hands-on-with-aws-bottlerocket/">
+      
+      
+        
+      
+      
+        <link rel="alternate" type="application/rss+xml" title="RSS feed" href="../../feed_rss_created.xml">
+        <link rel="alternate" type="application/rss+xml" title="RSS feed of updated content" href="../../feed_rss_updated.xml">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>EKS Hardening: Blocking Pod-Level Access to IMDS - pitfallen.net</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="EKS Hardening: Blocking Pod-Level Access to IMDS - pitfallen.net" />
+<meta property="og:description" content="Cloud & Container Security" />
+<meta property="og:image" content="https://pitfallen.net/assets/images/social/blog/eks-hardening-blocking-pod-level-access-to-imds.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://pitfallen.net/blog/eks-hardening-blocking-pod-level-access-to-imds/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="EKS Hardening: Blocking Pod-Level Access to IMDS - pitfallen.net" />
+<meta property="twitter:description" content="Cloud & Container Security" />
+<meta property="twitter:image" content="https://pitfallen.net/assets/images/social/blog/eks-hardening-blocking-pod-level-access-to-imds.png" />
+</head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="lime" data-md-color-accent="lime">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#eks-hardening-blocking-pod-level-access-to-imds" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="pitfallen.net" class="md-header__button md-logo" aria-label="pitfallen.net" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            pitfallen.net
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              EKS Hardening: Blocking Pod-Level Access to IMDS
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+                
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="pitfallen.net" class="md-nav__button md-logo" aria-label="pitfallen.net" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 19V7H4v12zm0-16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-7 14v-2h5v2zm-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59z"/></svg>
+
+    </a>
+    pitfallen.net
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud &amp; Container Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-remaining-threat-rce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Remaining Threat: RCE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-solution-imds-hop-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Solution: IMDS Hop Limit?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-challenge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Challenge
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-1-iam-roles-for-service-accounts-irsa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment 1. IAM Roles for Service Accounts (IRSA)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#experiment-2-podidentity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment 2. PodIdentity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results &amp; Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+  <div class="md-content md-content--post" data-md-component="content">
+    <div class="md-sidebar md-sidebar--post" data-md-component="sidebar" data-md-type="navigation">
+      <div class="md-sidebar__scrollwrap">
+        <div class="md-sidebar__inner md-post">
+          <nav class="md-nav md-nav--primary">
+            <div class="md-post__back">
+              <div class="md-nav__title md-nav__container">
+                <a href="../.." class="md-nav__link">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+                  <span class="md-ellipsis">
+                    Back to index
+                  </span>
+                </a>
+              </div>
+            </div>
+            
+              <div class="md-post__authors md-typeset">
+                
+                  <div class="md-profile md-post__profile">
+                    <span class="md-author md-author--long">
+                      <img src="../../assets/images/author.jpg" alt="Terry Franklin">
+                    </span>
+                    <span class="md-profile__description">
+                      <strong>
+                        
+                          <a href="https://www.linkedin.com/in/terryf82/">Terry Franklin</a>
+                        
+                      </strong>
+                      <br>
+                      
+                    </span>
+                  </div>
+                
+              </div>
+            
+            <ul class="md-post__meta md-nav__list">
+              <li class="md-nav__item md-nav__item--section">
+                <div class="md-post__title">
+                  <span class="md-ellipsis">
+                    Metadata
+                  </span>
+                </div>
+                <nav class="md-nav">
+                  <ul class="md-nav__list">
+                    <li class="md-nav__item">
+                      <div class="md-nav__link">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 19H5V8h14m-3-7v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-1V1m-1 11h-5v5h5z"/></svg>
+                        <time datetime="2025-08-04 00:00:00+00:00" class="md-ellipsis">August 4, 2025</time>
+                      </div>
+                    </li>
+                    
+                    
+                    
+                      
+                      <li class="md-nav__item">
+                        <div class="md-nav__link">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20a8 8 0 0 0 8-8 8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10 10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"/></svg>
+                          <span class="md-ellipsis">
+                            
+                              13 min read
+                            
+                          </span>
+                        </div>
+                      </li>
+                    
+                  </ul>
+                </nav>
+              </li>
+            </ul>
+            
+          </nav>
+          
+        </div>
+      </div>
+    </div>
+    <article class="md-content__inner md-typeset">
+      
+        
+  
+
+
+
+
+<h1 id="eks-hardening-blocking-pod-level-access-to-imds">EKS Hardening: Blocking Pod-Level Access to IMDS</h1>
+<p><em>Effectively securing pods inside an EKS cluster, swirling with cloud permissions, has always been challenging. Is it possible to close off a well-known source of risk, while still ensuring basic functionality?</em></p>
+<p><img alt="EKS Hardening: Blocking Pod-Level Access to IMDS" src="../../assets/images/post1.png" /></p>
+<!-- more -->
+
+<h2 id="introduction">Introduction</h2>
+<p>The principle of role-based access control (RBAC) within kubernetes is built on a simple idea - provide only the permissions required by an individual process (pod, in this case) in order for it to do its job. There's a lot riding on this control: get it right, and pods managing all kinds of different workloads can safely operate alongside each other in a common environment; get it wrong though, and there is the very real risk of simple vulnerabilities escalating into potentially disastrous outcomes.</p>
+<p>The situation isn't helped by the fact that, within a kubernetes cluster, not all players are equal. Pods may only need basic permissions to perform their specific task (pulling messages from SQS, writing files to S3 etc.) but something has to provide the resources for those pods to run on, which is the role of the worker nodes. These nodes require access at a more fundamental (and impactful) level - they need to be able to pull the images that run the workloads, as well as understand the resources and configuration of the environment they exist within.</p>
+<p>A lot of this functionality is handled via the Internal Metadata Service (IMDS), a locally-accessible API that provides access to configuration data, as well as the credentials needed for the node to authenticate itself. IMDS was never intended to service anything but the hosting node, but the nature of the container runtime (EKS uses <a href="https://containerd.io/">containerd</a>) means that pods are simply processes running atop the worker, allowing them to access the infamous <code>http://169.254.169.254</code> address just as easily. Since the first version of IMDS (<code>IMDSv1</code>) was built with no method of authentication, this enabled a straightforward path to privilege escalation that resulted in a number of high-profile incidents, such as the <a href="https://dl.acm.org/doi/full/10.1145/3546068">Capital One data breach</a> in 2019.</p>
+<p>In response, Amazon introduced <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html">IMDSv2</a> and took a major step forward in reducing this risk, by mandating use of the metadata API must first involve generation of a session token via an <code>HTTP PUT</code> request. This token must then be supplied via a header in all subsequent requests. Asssuming that IMDSv2 is not just enabled but actually <em>enforced</em>, this prevents an attacker from proxying metadata requests using various common methods, such as abusing a misconfigured firewall, unrestricted reverse proxy or server-side request forgery (SSRF) vulnerability. And yet, it still doesn't fully address the problem.</p>
+<h2 id="the-remaining-threat-rce">The Remaining Threat: RCE</h2>
+<p>By itself, the new approach to security in IMDSv2 is still vulnerable to abuse through the discovery of remote code execution (RCE). An attacker who can execute commands inside a running pod (via uploading a web-shell, discovery a command injection vulnerability or similar) can easily promote themselves to node-level access. How easily? Simply request a session token via curl:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-X<span class="w"> </span>PUT<span class="w"> </span><span class="s2">&quot;http://169.254.169.254/latest/api/token&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-aws-ec2-metadata-token-ttl-seconds: 21600&quot;</span><span class="w"> </span>-s<span class="k">)</span>
+</span></code></pre></div>
+<p>then use that token to retrieve instance credentials from the node via IMDS:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-aws-ec2-metadata-token: </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span>http://169.254.169.254/latest/meta-data/iam/security-credentials/karpenter-worker/
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="o">{</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="s2">&quot;Code&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;Success&quot;</span>,
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="s2">&quot;LastUpdated&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;2025-08-04T06:23:29Z&quot;</span>,
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="s2">&quot;Type&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;AWS-HMAC&quot;</span>,
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="s2">&quot;AccessKeyId&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;ASIA4VDBL2NIXYVXTEPT&quot;</span>,
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="s2">&quot;SecretAccessKey&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;d5NB5Jr/y+018xfUdjtuNO/3Q9sxmps21bW6rGK1&quot;</span>,
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="s2">&quot;Token&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;IQoJb3Jp...B6alm4tBg6A==&quot;</span>,
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="s2">&quot;Expiration&quot;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;2025-08-04T12:57:32Z&quot;</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="o">}</span>
+</span></code></pre></div></p>
+<p>These values can then be set as environment variables:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="s2">&quot;ASIA4VDBL2NIXYVXTEPT&quot;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span><span class="s2">&quot;d5NB5Jr/y+018xfUdjtuNO/3Q9sxmps21bW6rGK1&quot;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_SESSION_TOKEN</span><span class="o">=</span><span class="s2">&quot;IQoJb3Jp...B6alm4tBg6A==&quot;</span>
+</span></code></pre></div>
+<p>And with very little effort, the attacker has assumed the worker node's role:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>aws<span class="w"> </span>sts<span class="w"> </span>get-caller-identity
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="o">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="s2">&quot;UserId&quot;</span>:<span class="w"> </span><span class="s2">&quot;AROA4VDBL2CUDQE2KIGEY:i-0db92f4d7339c0c95&quot;</span>,
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="s2">&quot;Account&quot;</span>:<span class="w"> </span><span class="s2">&quot;000000000000&quot;</span>,
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="s2">&quot;Arn&quot;</span>:<span class="w"> </span><span class="s2">&quot;arn:aws:sts::000000000000:assumed-role/karpenter-worker/i-0db92f4d7339c0c95&quot;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="o">}</span>
+</span></code></pre></div></p>
+<p>EKS worker nodes are typically configured with roles that include a number of AWS managed policies, enabling several privileged actions that are likely to be of interest to an attacker:</p>
+<p><a href="https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonEKSWorkerNodePolicy.html">AmazonEKSWorkerNodePolicy</a>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;Version&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;Statement&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">      </span><span class="nt">&quot;Sid&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WorkerNodePermissions&quot;</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeInstances&quot;</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeInstanceTypes&quot;</span><span class="p">,</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeRouteTables&quot;</span><span class="p">,</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeSecurityGroups&quot;</span><span class="p">,</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeSubnets&quot;</span><span class="p">,</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeVolumes&quot;</span><span class="p">,</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeVolumesModifications&quot;</span><span class="p">,</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">        </span><span class="s2">&quot;ec2:DescribeVpcs&quot;</span><span class="p">,</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">        </span><span class="s2">&quot;eks:DescribeCluster&quot;</span><span class="p">,</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">        </span><span class="s2">&quot;eks-auth:AssumeRoleForPodIdentity&quot;</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">      </span><span class="p">],</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;*&quot;</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<p><a href="https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonEC2ContainerRegistryReadOnly.html">AmazonEC2ContainerRegistryReadOnly</a>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;Version&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;Statement&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">        </span><span class="s2">&quot;ecr:GetAuthorizationToken&quot;</span><span class="p">,</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span><span class="s2">&quot;ecr:BatchCheckLayerAvailability&quot;</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="s2">&quot;ecr:GetDownloadUrlForLayer&quot;</span><span class="p">,</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="s2">&quot;ecr:GetRepositoryPolicy&quot;</span><span class="p">,</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="s2">&quot;ecr:DescribeRepositories&quot;</span><span class="p">,</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="s2">&quot;ecr:ListImages&quot;</span><span class="p">,</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">        </span><span class="s2">&quot;ecr:DescribeImages&quot;</span><span class="p">,</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">        </span><span class="s2">&quot;ecr:BatchGetImage&quot;</span><span class="p">,</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">        </span><span class="s2">&quot;ecr:GetLifecyclePolicy&quot;</span><span class="p">,</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">        </span><span class="s2">&quot;ecr:GetLifecyclePolicyPreview&quot;</span><span class="p">,</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">        </span><span class="s2">&quot;ecr:ListTagsForResource&quot;</span><span class="p">,</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">        </span><span class="s2">&quot;ecr:DescribeImageScanFindings&quot;</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">      </span><span class="p">],</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;*&quot;</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="w">  </span><span class="p">]</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<p>There are clearly a number of privileges here that would prove very useful when enumerating a cloud environnment, such as <code>ec2:DescribeInstances</code> and <code>ec2:DescribeSecurityGroups</code>. Similarly, the ability to browse through and download images from all ECR repositories (<code>ecr.DescribeRepositories</code>, <code>ecr.ListImages</code> and <code>ecr.GetAuthorizationToken</code>) are likely to yield additional sensitive information, from images typically thought of as 'private'.</p>
+<p>To be clear, these are privileges that nodes absolutely need in order to function as part of the EKS cluster. But the risk of them being stolen from application pods running on the nodes represents a serious threat. All that it takes is for a public-facing app to be shipped with an RCE vulnerability - either through inclusion of insecure code, or the use of a vulnerable dependency - and a large part of the EKS cluster's cloud environment is exposed, even if IMDSv2 is enforced.</p>
+<h2 id="the-solution-imds-hop-limit">The Solution: IMDS Hop Limit?</h2>
+<p>There is usually more to the story, however, and in this case it comes in the form of the <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-existing-instances.html#modify-PUT-response-hop-limit">IMDS response hop limit</a>. The AWS documentation outlines the purpose of this setting:</p>
+<blockquote>
+<p>The hop limit is the number of network hops that the PUT response is allowed to make. You can set the hop limit to a minimum of 1 and a maximum of 64.</p>
+</blockquote>
+<p>Essentially operating as a packet-level time to live (TTL), the hop limit dictates how far across the network a token (PUT) response can travel. Setting it to the minimum value of <code>1</code> means it can only reach the calling node itself, which again is absolutely required for normal cluster operation. A value of <code>2</code> allows the response to travel up to two hops, meaning it could reach the pods running on a node - exactly where it might be attainable via RCE.</p>
+<p>Based on this information then, it sounds like the obvious choice would be to simply set the hop limit of all nodes to <code>1</code>. The docs, however, also include a vague note of caution on this:</p>
+<blockquote>
+<p>In a container environment, a hop limit of 1 can cause issues.</p>
+</blockquote>
+<p>In other words, under certain security configurations, pods may need to be able to call IMDS on their host nodes in order to perform their intended function. This could be for the purposes of obtaining credentials, or even something as seemingly harmless as identifying the region the node exists in. So while setting the IMDS hop limit to <code>1</code> might <em>seem</em> like a good way to improve security, it might also prevent pods from running at all, which is definitely not ideal. To further complicate matters, it seems that when a hop limit is not explicitly specified (via a launch template or similar) AWS will often set a default hop limit of <code>2</code>, leading many to believe that this is infact the required value for their EKS cluster to function correctly.</p>
+<p>Clearly, there is some confusion around what is really possible with this setting. The only real way to understand the situation is to try out some different configurations, and evaluate the results.</p>
+<h2 id="the-challenge">The Challenge</h2>
+<p>So the question becomes - can we mandate a metadata response hop limit of <code>1</code>, thereby preventing the threat of privilege escalation from a compromised pod, while still allowing pods to operate correctly?</p>
+<p>Pod-level security mechanisms have evolved a lot over the years, to the point where there are a number of choices when it comes to management. In this post, we'll evaluate the feasability of configuring pods to successfully run on nodes with a hop limit of <code>1</code> using two common solutions:</p>
+<ol>
+<li>IAM Roles for Service Accounts (IRSA)</li>
+<li>PodIdentity</li>
+</ol>
+<h2 id="environment-setup">Environment Setup</h2>
+<p>In order to easily provision worker nodes with the different hop limit configurations we need, we'll use <a href="https://karpenter.sh/">karpenter</a>, a high-performance kubernetes autoscaler built by AWS. We can deploy two different <code>EC2NodeClasses</code> (node configurations) into an existing EKS cluster. The first named <code>ec2nc-with-hop-limit-2</code> will set a hop limit value of <code>2</code> (the current default in our cluster):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>apiVersion: karpenter.k8s.aws/v1beta1
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>kind: EC2NodeClass
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>metadata:
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  name: ec2nc-with-hop-limit-2
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>spec:
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>  amiFamily: AL2023
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>  instanceProfile: KarpenterNodeInstanceProfile-${CLUSTER_NAME}
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>  metadataOptions:
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    httpTokens:
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    httpPutResponseHopLimit: 2
+</span></code></pre></div>
+<p>and the second named <code>ec2nc-with-hop-limit-1</code> will set a hop limit value of <code>1</code>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>apiVersion: karpenter.k8s.aws/v1beta1
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>kind: EC2NodeClass
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>metadata:
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  name: ec2nc-with-hop-limit-1
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>spec:
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>  amiFamily: AL2023
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>  instanceProfile: KarpenterNodeInstanceProfile-${CLUSTER_NAME}
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>  metadataOptions:
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    httpTokens:
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    httpPutResponseHopLimit: 1
+</span></code></pre></div></p>
+<p>We then wrap these <code>EC2NodeClasses</code> in karpenter <code>NodePools</code>, which essentially just provide a way to reference &amp; request nodes of that configuration:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>apiVersion: karpenter.sh/v1beta1
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>kind: NodePool
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>metadata:
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  name: np-with-hop-limit-2
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>spec:
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  template:
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    spec:
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>      requirements:
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>      ...
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>      nodeClassRef:
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        apiVersion: karpenter.k8s.aws/v1beta1
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>        kind: EC2NodeClass
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        name: ec2nc-with-hop-limit-2
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>  ...
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>apiVersion: karpenter.sh/v1beta1
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>kind: NodePool
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>metadata:
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  name: np-with-hop-limit-1
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>spec:
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>  template:
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    spec:
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>      requirements:
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>      ...
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>      nodeClassRef:
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>        apiVersion: karpenter.k8s.aws/v1beta1
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>        kind: EC2NodeClass
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>        name: ec2nc-with-hop-limit-1
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>  ...
+</span></code></pre></div>
+<p>In order the assess whether pods running on these two different <code>NodePools</code> can still interact with AWS resources in a functioning way, we'll use a basic pod spec that starts an alpine linux container that can be used to issue aws cli commands:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>apiVersion: v1
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>kind: Pod
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>metadata:
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  name: hop-limit-demo-app
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>spec:
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  containers:
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>  - name: demo-app
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    image: alpine:latest
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    command: [&quot;tail&quot;, &quot;-f&quot;, &quot;/dev/null&quot;]
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>  nodeSelector:
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    nodepool: # set to either np-with-hop-limit-2 or np-with-hop-limit-1
+</span></code></pre></div>
+<p>With the demo pod deployed to both <code>NodePools</code>, we can immediately see the effect of setting <code>httpPutResponseHopLimit</code> via the <code>EC2NodeClass</code>. When running on a node using the <code>ec2nc-with-hop-limit-2</code> configuration, token requests from the pod to IMDS work as normal:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>PUT<span class="w"> </span><span class="s2">&quot;http://169.254.169.254/latest/api/token&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-aws-ec2-metadata-token-ttl-seconds: 21600&quot;</span><span class="w"> </span>-v
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>*<span class="w">   </span>Trying<span class="w"> </span><span class="m">169</span>.254.169.254:80...
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>*<span class="w"> </span>Connected<span class="w"> </span>to<span class="w"> </span><span class="m">169</span>.254.169.254<span class="w"> </span><span class="o">(</span><span class="m">169</span>.254.169.254<span class="o">)</span><span class="w"> </span>port<span class="w"> </span><span class="m">80</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>*<span class="w"> </span>using<span class="w"> </span>HTTP/1.x
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>&gt;<span class="w"> </span>PUT<span class="w"> </span>/latest/api/token<span class="w"> </span>HTTP/1.1
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>&gt;<span class="w"> </span>Host:<span class="w"> </span><span class="m">169</span>.254.169.254
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>&gt;<span class="w"> </span>User-Agent:<span class="w"> </span>curl/8.14.1
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>&gt;<span class="w"> </span>Accept:<span class="w"> </span>*/*
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>&gt;<span class="w"> </span>X-aws-ec2-metadata-token-ttl-seconds:<span class="w"> </span><span class="m">21600</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>&gt;
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>&lt;<span class="w"> </span>HTTP/1.1<span class="w"> </span><span class="m">200</span><span class="w"> </span>OK
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>&lt;<span class="w"> </span>X-Aws-Ec2-Metadata-Token-Ttl-Seconds:<span class="w"> </span><span class="m">21600</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>&lt;<span class="w"> </span>Content-Length:<span class="w"> </span><span class="m">56</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>&lt;<span class="w"> </span>Date:<span class="w"> </span>Wed,<span class="w"> </span><span class="m">30</span><span class="w"> </span>Jul<span class="w"> </span><span class="m">2025</span><span class="w"> </span><span class="m">23</span>:22:04<span class="w"> </span>GMT
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>&lt;<span class="w"> </span>Server:<span class="w"> </span>EC2ws
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>&lt;<span class="w"> </span>Connection:<span class="w"> </span>close
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>&lt;<span class="w"> </span>Content-Type:<span class="w"> </span>text/plain
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>&lt;
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>*<span class="w"> </span>we<span class="w"> </span>are<span class="w"> </span><span class="k">done</span><span class="w"> </span>reading<span class="w"> </span>and<span class="w"> </span>this<span class="w"> </span>is<span class="w"> </span><span class="nb">set</span><span class="w"> </span>to<span class="w"> </span>close,<span class="w"> </span>stop<span class="w"> </span>send
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>*<span class="w"> </span>abort<span class="w"> </span>upload
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>*<span class="w"> </span>shutting<span class="w"> </span>down<span class="w"> </span>connection<span class="w"> </span><span class="c1">#0</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="nv">AQAEAIXkhdOR3sIqAVRdg0mVAdHYRr_fkfFDU7SDzH9whlWZJwANKg</span><span class="o">==</span>/
+</span></code></pre></div></p>
+<p>Running the same request on a pod deployed using <code>ec2nc-with-hop-limit-1</code>, however, times out when requesting a token:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>PUT<span class="w"> </span><span class="s2">&quot;http://169.254.169.254/latest/api/token&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-aws-ec2-metadata-token-ttl-seconds: 21600&quot;</span><span class="w"> </span>-v
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>*<span class="w">   </span>Trying<span class="w"> </span><span class="m">169</span>.254.169.254:80...
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>*<span class="w"> </span>Connected<span class="w"> </span>to<span class="w"> </span><span class="m">169</span>.254.169.254<span class="w"> </span><span class="o">(</span><span class="m">169</span>.254.169.254<span class="o">)</span><span class="w"> </span>port<span class="w"> </span><span class="m">80</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>*<span class="w"> </span>using<span class="w"> </span>HTTP/1.x
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>&gt;<span class="w"> </span>PUT<span class="w"> </span>/latest/api/token<span class="w"> </span>HTTP/1.1
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>&gt;<span class="w"> </span>Host:<span class="w"> </span><span class="m">169</span>.254.169.254
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>&gt;<span class="w"> </span>User-Agent:<span class="w"> </span>curl/8.14.1
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>&gt;<span class="w"> </span>Accept:<span class="w"> </span>*/*
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>&gt;<span class="w"> </span>X-aws-ec2-metadata-token-ttl-seconds:<span class="w"> </span><span class="m">21600</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>&gt;
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>*<span class="w"> </span>Request<span class="w"> </span>completely<span class="w"> </span>sent<span class="w"> </span>off
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>*<span class="w"> </span>Recv<span class="w"> </span>failure:<span class="w"> </span>Connection<span class="w"> </span>reset<span class="w"> </span>by<span class="w"> </span>peer
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>*<span class="w"> </span>closing<span class="w"> </span>connection<span class="w"> </span><span class="c1">#0</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>curl:<span class="w"> </span><span class="o">(</span><span class="m">56</span><span class="o">)</span><span class="w"> </span>Recv<span class="w"> </span>failure:<span class="w"> </span>Connection<span class="w"> </span>reset<span class="w"> </span>by<span class="w"> </span>peer
+</span></code></pre></div></p>
+<p>With our two testing environments prepared, we can now evaluate the pod-level mechanisms to understand if they are impacted by the hop limit.</p>
+<h2 id="experiment-1-iam-roles-for-service-accounts-irsa">Experiment 1. IAM Roles for Service Accounts (IRSA)</h2>
+<p>Also released by AWS in 2019, IRSA provides a means for kubernetes workloads to access AWS services and resources, through use of <a href="https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html">OpenID Connect (OIDC)</a>. In order to test our setup against IRSA, we need to modify the configuration of our demo app to include:</p>
+<ol>
+<li>
+<p>A <code>ServiceAccount</code> object, bound to an IAM role via annotation:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>apiVersion: v1
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>kind: ServiceAccount
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>metadata:
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>  name: hop-limit-demo-app-sa
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>  annotations:
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    eks.amazonaws.com/role-arn: arn:aws:iam::000000000000:role/hop-limit-demo-app-role
+</span></code></pre></div></p>
+</li>
+<li>
+<p>A reference to the <code>ServiceAccount</code> in the pod's spec:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>spec:
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  serviceAccountName: hop-limit-demo-app-sa
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  containers:
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  ...
+</span></code></pre></div></p>
+</li>
+</ol>
+<p>Additionally, an IAM role <code>hop-limit-demo-app-role</code> will need to be created in the hosting AWS account, with a trust policy that allows it to be assumed via OIDC. The role also requires an IAM policy that enables the permissions our app needs to function. For the purposes of this experiment, we'll assume our demo app simply needs to be able to list and interact (put, delete, update) with objects in an S3 bucket:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>aws<span class="w"> </span>iam<span class="w"> </span>create-role<span class="w"> </span>--role-name<span class="w"> </span>hop-limit-demo-app-role<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>--assume-role-policy-document<span class="w"> </span><span class="s2">&quot;{\&quot;Version\&quot;:\&quot;2012-10-17\&quot;,\&quot;Statement\&quot;:[{\&quot;Effect\&quot;:\&quot;Allow\&quot;,\&quot;Principal\&quot;:{\&quot;Federated\&quot;:\&quot;arn:aws:iam::000000000000:oidc-provider/oidc.eks.us-west-2.amazonaws.com/id/24E3DC8B5FG87CD57B2B0ZZ8D6B7079X\&quot;},\&quot;Action\&quot;:\&quot;sts:AssumeRoleWithWebIdentity\&quot;,\&quot;Condition\&quot;:{\&quot;StringEquals\&quot;:{\&quot;oidc.eks.us-west-2.amazonaws.com/id/24E3DC8B5FG87CD57B2B0ZZ8D6B7079X:aud\&quot;:\&quot;sts.amazonaws.com\&quot;,\&quot;oidc.eks.us-west-2.amazonaws.com/id/24E3DC8B5FG87CD57B2B0ZZ8D6B7079X:sub\&quot;:\&quot;system:serviceaccount:hop-limit-demo-app:hop-limit-demo-app-sa\&quot;}}}]}&quot;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>aws<span class="w"> </span>iam<span class="w"> </span>put-role-policy<span class="w"> </span>--role-name<span class="w"> </span>hop-limit-demo-app-role<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>--policy-name<span class="w"> </span>hop-limit-demo-app-policy<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>--policy-document<span class="w"> </span><span class="s2">&quot;{\&quot;Version\&quot;:\&quot;2012-10-17\&quot;,\&quot;Statement\&quot;:[{\&quot;Action\&quot;:[\&quot;s3:ListBucket\&quot;,\&quot;s3:*Object\&quot;],\&quot;Resource\&quot;:[\&quot;arn:aws:s3:::hop-limit-demo-app-bucket\&quot;,\&quot;arn:aws:s3:::hop-limit-demo-app-bucket/*\&quot;],\&quot;Effect\&quot;:\&quot;Allow\&quot;}]}&quot;</span>
+</span></code></pre></div>
+<p>After creating the new IAM role &amp; policy, and deploying the new manifests, we can confirm that the pod running on a node with a hop limit of <code>2</code> has no problems identifying itself via <code>get-caller-identity</code>:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>aws<span class="w"> </span>sts<span class="w"> </span>get-caller-identity
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="o">{</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="s2">&quot;UserId&quot;</span>:<span class="w"> </span><span class="s2">&quot;AROA4VDBL2NISX2M4YIVX:botocore-session-1754021985&quot;</span>,
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="s2">&quot;Account&quot;</span>:<span class="w"> </span><span class="s2">&quot;000000000000&quot;</span>,
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="s2">&quot;Arn&quot;</span>:<span class="w"> </span><span class="s2">&quot;arn:aws:sts::000000000000:assumed-role/hop-limit-demo-app-role/botocore-session-1754021985&quot;</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="o">}</span>
+</span></code></pre></div></p>
+<p>It's also perfectly able to perform the actions in the attached policy, including writing objects to an S3 bucket and listing the contents:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/test.txt<span class="w"> </span>s3://hop-limit-demo-app-bucket/test.txt
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>upload:<span class="w"> </span>tmp/test.txt<span class="w"> </span>to<span class="w"> </span>s3://hop-limit-demo-app-bucket/test.txt
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>hop-limit-demo-app-bucket
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="m">2025</span>-08-01<span class="w"> </span><span class="m">04</span>:24:40<span class="w">          </span><span class="m">5</span><span class="w"> </span>test.txt
+</span></code></pre></div></p>
+<p>If the demo app is deployed to a node with hop limit of <code>1</code>, we can confirm that its privileges remain unaffected, despite no longer having access to IMDS:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>aws<span class="w"> </span>sts<span class="w"> </span>get-caller-identity
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="o">{</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="s2">&quot;UserId&quot;</span>:<span class="w"> </span><span class="s2">&quot;AROA4VDBL2NISX2M4YIVX:botocore-session-1754200769&quot;</span>,
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">    </span><span class="s2">&quot;Account&quot;</span>:<span class="w"> </span><span class="s2">&quot;000000000000&quot;</span>,
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span><span class="s2">&quot;Arn&quot;</span>:<span class="w"> </span><span class="s2">&quot;arn:aws:sts::000000000000:assumed-role/hop-limit-demo-app-role/botocore-session-1754200769&quot;</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="o">}</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/test.txt<span class="w"> </span>s3://hop-limit-demo-app-bucket/test.txt
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>upload:<span class="w"> </span>tmp/test.txt<span class="w"> </span>to<span class="w"> </span>s3://hop-limit-demo-app-bucket/test.txt
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>hop-limit-demo-app-bucket
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="m">2025</span>-08-01<span class="w"> </span><span class="m">04</span>:26:37<span class="w">          </span><span class="m">6</span><span class="w"> </span>test.txt
+</span></code></pre></div></p>
+<div class="admonition success">
+<p class="admonition-title">Verdict: Successful</p>
+<p>Pods running with privileges supplied via IAM Roles for Service Accounts (IRSA) are compatible with an IMDS hop limit of <code>1</code>.</p>
+</div>
+<h2 id="experiment-2-podidentity">Experiment 2. PodIdentity</h2>
+<p>PodIdentity was released in 2023 as an attempt to simplify authenticating kubernetes workloads in AWS, by allowing the ServiceAccount-to-IAM-role connection (known as a <code>Pod Identity Association</code>) to be created via the EKS console or the <code>eksctl</code> CLI.</p>
+<p>To test out this approach, we need to again create an IAM role with an appropriate permissions policy. Note that in this case however, the role's trust policy does not reference OIDC, as it plays no part in PodIdentity (a positive side-effect of PodIdentity is that a single role can be accessed from multiple EKS clusters, without needing to update the trust policy to include each cluster's unique OIDC provider):</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>aws<span class="w"> </span>iam<span class="w"> </span>create-role<span class="w"> </span>--role-name<span class="w"> </span>hop-limit-demo-app-role-pod-identity<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>--assume-role-policy-document<span class="w"> </span><span class="s2">&quot;{\&quot;Version\&quot;:\&quot;2012-10-17\&quot;,\&quot;Statement\&quot;:[{\&quot;Effect\&quot;:\&quot;Allow\&quot;,\&quot;Principal\&quot;:{\&quot;Service\&quot;:\&quot;pods.eks.amazonaws.com\&quot;},\&quot;Action\&quot;:[\&quot;sts:AssumeRole\&quot;, \&quot;sts:TagSession\&quot;]}]}&quot;</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>aws<span class="w"> </span>iam<span class="w"> </span>put-role-policy<span class="w"> </span>--role-name<span class="w"> </span>hop-limit-demo-app-role-pod-identity<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>--policy-name<span class="w"> </span>hop-limit-demo-app-pod-identity-policy<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>--policy-document<span class="w"> </span><span class="s2">&quot;{\&quot;Version\&quot;:\&quot;2012-10-17\&quot;,\&quot;Statement\&quot;:[{\&quot;Action\&quot;:[\&quot;s3:ListBucket\&quot;,\&quot;s3:*Object\&quot;],\&quot;Resource\&quot;:[\&quot;arn:aws:s3:::hop-limit-demo-app-bucket\&quot;,\&quot;arn:aws:s3:::hop-limit-demo-app-bucket/*\&quot;],\&quot;Effect\&quot;:\&quot;Allow\&quot;}]}&quot;</span>
+</span></code></pre></div>
+<p>We then create the pod identity association, that binds the IAM role to a specific service account within a single namespace:
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>aws<span class="w"> </span>eks<span class="w"> </span>create-pod-identity-association<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>--cluster-name<span class="w"> </span>tmb-npd-usw2-eks<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>--namespace<span class="w"> </span>hop-limit-demo-app<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>--service-account<span class="w"> </span>hop-limit-demo-app-pod-identity-sa<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>--role-arn<span class="w"> </span>arn:aws:iam::000000000000:role/hop-limit-demo-app-role-pod-identity<span class="w">  </span>
+</span></code></pre></div></p>
+<p>With the new ServiceAccount <code>hop-limit-demo-app-pod-identity-sa</code> bound to the pod, we can deploy it to our two node configurations for evaluation. Running on a node with a hop limit of <code>2</code>, the pod is again able to identify itself and access the S3 bucket as expected:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>aws<span class="w"> </span>sts<span class="w"> </span>get-caller-identity
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="o">{</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span><span class="s2">&quot;UserId&quot;</span>:<span class="w"> </span><span class="s2">&quot;AROA4VDBL2NITVDU7NO6C:eks-demo-cluster-hop-limit--832f49b9-b135-44f3-b6a4-d586ce81119f&quot;</span>,
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">    </span><span class="s2">&quot;Account&quot;</span>:<span class="w"> </span><span class="s2">&quot;000000000000&quot;</span>,
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">    </span><span class="s2">&quot;Arn&quot;</span>:<span class="w"> </span><span class="s2">&quot;arn:aws:sts::000000000000:assumed-role/hop-limit-demo-app-role-pod-identity/eks-demo-cluster-hop-limit--832f49b9-b135</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="s2">-44f3-b6a4-d586ce81119f&quot;</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="o">}</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/test3.txt<span class="w"> </span>s3://hop-limit-demo-app-bucket/test3.txt
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>upload:<span class="w"> </span>tmp/test3.txt<span class="w"> </span>to<span class="w"> </span>s3://hop-limit-demo-app-bucket/test3.txt
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>s3://hop-limit-demo-app-bucket
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="m">2025</span>-08-03<span class="w"> </span><span class="m">06</span>:18:25<span class="w">          </span><span class="m">6</span><span class="w"> </span>test3.txt
+</span></code></pre></div>
+<p>And again, even when deployed to a node with a hop limit of <code>1</code>, the pod continues to function correctly:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>aws<span class="w"> </span>sts<span class="w"> </span>get-caller-identity
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="o">{</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">    </span><span class="s2">&quot;UserId&quot;</span>:<span class="w"> </span><span class="s2">&quot;AROA4VDBL2NITVDU7NO6C:eks-demo-cluster-hop-limit--27102cfa-a547-4625-9e56-c2f863c99793&quot;</span>,
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">    </span><span class="s2">&quot;Account&quot;</span>:<span class="w"> </span><span class="s2">&quot;000000000000&quot;</span>,
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">    </span><span class="s2">&quot;Arn&quot;</span>:<span class="w"> </span><span class="s2">&quot;arn:aws:sts::000000000000:assumed-role/hop-limit-demo-app-role-pod-identity/eks-demo-cluster-hop-limit--27102cfa-a547</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="s2">-4625-9e56-c2f863c99793&quot;</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="o">}</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/test4.txt<span class="w"> </span>s3://hop-limit-demo-app-bucket/test4.txt
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>upload:<span class="w"> </span>tmp/test4.txt<span class="w"> </span>to<span class="w"> </span>s3://hop-limit-demo-app-bucket/test4.txt
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>/<span class="w"> </span>aws<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>s3://hop-limit-demo-app-bucket
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="m">2025</span>-08-03<span class="w"> </span><span class="m">06</span>:20:39<span class="w">          </span><span class="m">6</span><span class="w"> </span>test4.txt
+</span></code></pre></div>
+<div class="admonition success">
+<p class="admonition-title">Verdict: Successful</p>
+<p>As with IRSA, pods running with privileges supplied PodIdentity are also compatible with an IMDS hop limit of <code>1</code>.</p>
+</div>
+<h2 id="results-considerations">Results &amp; Considerations</h2>
+<p>Based on these results, implementing pod-level authentication using either IRSA or PodIdentity seems to be compatible with nodes configured with an IMDS hop limit of <code>1</code>.</p>
+<p>Enforcing this setting can have a meaningful impact on the security posture of an EKS cluster, by reducing the blast radius in the event that an attacker achieved pod-level RCE. As mentioned earlier, simply swapping to IMDSv2 is not enough to mitigate this kind of threat - pods need to be fully blocked from accessing the IMDS API, which is where the hop limit setting comes in to play.</p>
+<p>Given that both experiments proved successful, a valid question becomes - is there any configuration that might be problematic with a hop limit of <code>1</code>? Some research seems to suggest a few configurations that might be problematic, neither of which is likely to affect well-architected applications running in modern infrastructure:</p>
+<ol>
+<li>
+<p>Old versions of EKS add-ons that are not fully optimised for IMDSv2 - these may still rely on IMDS to determine necessary environment details, such as AWS region, instance ID etc.</p>
+</li>
+<li>
+<p>Custom code or scripts - any kind of code that specifically makes a request to IMDS (again, usually for retrieving envirnoment details like AWS region) will most likely break if nodes are configured with a hop limit of <code>1</code>.</p>
+</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<div class="admonition abstract">
+<p class="admonition-title">Can It Be Done?</p>
+<p>As long as applications are properly configured with IRSA or PodIdentity, enforcing an IMDS hop limit of <code>1</code> should not impact their ability to function, and it will improve the security of your cluster.</p>
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+  
+
+
+
+      
+    </article>
+  </div>
+
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+        
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+        
+          
+          <a href="../hands-on-with-aws-bottlerocket/" class="md-footer__link md-footer__link--next" aria-label="Next: Hands On with AWS Bottlerocket: Evaluating the Security of Amazon&#39;s Hardened OS">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Hands On with AWS Bottlerocket: Evaluating the Security of Amazon's Hardened OS
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/terryf82/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77m282.1 320h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "navigation.expand", "navigation.footer"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
